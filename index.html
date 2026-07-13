@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-src blob:; img-src data:; font-src data:; base-uri 'none'; form-action 'none'">
+<title>شاشة خاصة</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071521;color:#f8f3e8;font-family:Tahoma,Arial,sans-serif}
+#gate{position:fixed;inset:0;display:grid;place-items:center;padding:28px;text-align:center;background:radial-gradient(circle at 50% 20%,#123245,#071521 60%)}
+#gate div{max-width:620px}#gate b{display:block;font-size:clamp(25px,4vw,54px);margin-bottom:12px}#gate span{color:#aab8ba;font-size:clamp(14px,1.4vw,22px)}
+iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#071521;display:none}
+</style>
+</head>
+<body>
+<div id="gate"><div><b>هذه شاشة خاصة</b><span id="status">افتح الرابط الكامل المخصص للتلفزيون.</span></div></div>
+<iframe id="screen" title="لوحة حسن الخاصة" sandbox="allow-scripts allow-same-origin"></iframe>
+<script>
+(function(){
+'use strict';
+var status=document.getElementById('status'),frame=document.getElementById('screen'),gate=document.getElementById('gate');
+function decodeKey(value){value=value.replace(/^k=/,'').replace(/-/g,'+').replace(/_/g,'/');while(value.length%4)value+='=';var raw=atob(value),out=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out}
+async function openScreen(){
+  try{
+    if(!window.crypto||!crypto.subtle)throw new Error('secure-browser-required');
+    var fragment=location.hash.slice(1);if(!fragment)throw new Error('missing-key');
+    var keyBytes=decodeKey(fragment);if(keyBytes.length!==32)throw new Error('invalid-key');
+    status.textContent='جاري فتح الشاشة…';
+    var response=await fetch('p-6ed30504cb2a374763f9.bin',{cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});if(!response.ok)throw new Error('payload');
+    var packed=new Uint8Array(await response.arrayBuffer());
+    if(packed.length<33||String.fromCharCode.apply(null,packed.slice(0,4))!=='LGD1')throw new Error('format');
+    var iv=packed.slice(4,16),cipher=packed.slice(16),key=await crypto.subtle.importKey('raw',keyBytes,{name:'AES-GCM'},false,['decrypt']);
+    var plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:iv,additionalData:new TextEncoder().encode('LG-DASHBOARD-V1'),tagLength:128},key,cipher);
+    var html=new TextDecoder().decode(plain),url=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+    frame.onload=function(){gate.style.display='none';frame.style.display='block'};frame.src=url;
+  }catch(error){status.textContent='الرابط غير مكتمل أو غير صالح.'}
+}
+openScreen();
+})();
+</script>
+</body>
+</html>
