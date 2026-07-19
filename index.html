@@ -28,7 +28,7 @@ async function openScreen(){
     var fragment=location.hash.slice(1);if(!fragment)throw new Error('missing-key');
     var keyBytes=decodeKey(fragment);if(keyBytes.length!==32)throw new Error('invalid-key');
     status.textContent='جاري فتح الشاشة…';
-    var response=await fetch('p-de3a9a8e39bcbd78c701.bin',{cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});if(!response.ok)throw new Error('payload');
+    var response=await fetch('p-f4b8b6cea2a8849bc759.bin',{cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});if(!response.ok)throw new Error('payload');
     var packed=new Uint8Array(await response.arrayBuffer());
     if(packed.length<33||String.fromCharCode.apply(null,packed.slice(0,4))!=='LGD1')throw new Error('format');
     var iv=packed.slice(4,16),cipher=packed.slice(16),key=await crypto.subtle.importKey('raw',keyBytes,{name:'AES-GCM'},false,['decrypt']);
